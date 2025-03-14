@@ -14,10 +14,12 @@ declare_id!("ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG");
 pub mod chunk_loader {
     use super::*;
 
+    #[instruction(discriminator = [1])]
     pub fn load_chunk(ctx: Context<LoadChunk>, chunk_holder_id: u32, chunk: Chunk) -> Result<()> {
         instructions::load_chunk(ctx, chunk_holder_id, chunk)
     }
 
+    #[instruction(discriminator = [2])]
     pub fn pass_to_cpi(ctx: Context<PassToCpi>) -> Result<()> {
         instructions::pass_to_cpi(ctx)
     }
