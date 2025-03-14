@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-#[account]
+#[account(discriminator = [1])]
 #[derive(Debug)]
 pub struct ChunkHolder {
     pub owner: Pubkey,
