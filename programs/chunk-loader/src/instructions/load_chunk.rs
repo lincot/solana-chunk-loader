@@ -30,7 +30,7 @@ pub fn load_chunk(ctx: Context<LoadChunk>, chunk_holder_id: u32, chunk: Chunk) -
         )
     } else {
         require!(
-            chunk_holder.try_borrow_data()?.get(..8) == Some(&ChunkHolder::DISCRIMINATOR),
+            chunk_holder.try_borrow_data()?.get(..8) == Some(ChunkHolder::DISCRIMINATOR),
             ErrorCode::AccountDiscriminatorMismatch
         );
         let space = chunk_holder.data_len() + chunk.self_space();

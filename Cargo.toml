@@ -8,6 +8,3 @@ resolver = "2"
 overflow-checks = true
 lto = true
 codegen-units = 1
-
-[patch.crates-io]
-curve25519-dalek = { git = "https://github.com/lincot/curve25519-dalek", branch = "unpin-zeroize" }
