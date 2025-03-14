@@ -29,12 +29,12 @@ pub fn load_chunk(ctx: Context<LoadChunk>, chunk_holder_id: u32, chunk: Chunk) -
             },
         )
     } else {
-        require!(
-            chunk_holder.try_borrow_data()?.get(..8) == Some(ChunkHolder::DISCRIMINATOR),
-            ErrorCode::AccountDiscriminatorMismatch
-        );
+        let data = chunk_holder.try_borrow_data()?;
+        let Some(rest_data) = data.strip_prefix(ChunkHolder::DISCRIMINATOR) else {
+            return err!(ErrorCode::AccountDiscriminatorMismatch);
+        };
         let space = chunk_holder.data_len() + chunk.self_space();
-        let mut data = ChunkHolder::deserialize(&mut &chunk_holder.try_borrow_data()?[8..])?;
+        let mut data = ChunkHolder::deserialize(&mut &rest_data[..])?;
         data.chunks.push(chunk);
         (space, data)
     };

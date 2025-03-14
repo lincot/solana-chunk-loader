@@ -38,7 +38,9 @@ where
     T: AnchorSerialize + Discriminator,
 {
     if !account.data_is_empty() {
-        let existing_admin = Pubkey::try_from_slice(&account.try_borrow_data()?[8..8 + 32])?;
+        let existing_admin = Pubkey::try_from_slice(
+            &account.try_borrow_data()?[T::DISCRIMINATOR.len()..T::DISCRIMINATOR.len() + 32],
+        )?;
         require!(existing_admin == admin, ErrorCode::ConstraintHasOne);
     }
 
@@ -84,8 +86,8 @@ where
     }
 
     let account_data = &mut *account.try_borrow_mut_data()?;
-    T::DISCRIMINATOR.serialize(&mut &mut account_data[..8])?;
-    data.serialize(&mut &mut account_data[8..])?;
+    account_data[..T::DISCRIMINATOR.len()].copy_from_slice(T::DISCRIMINATOR);
+    data.serialize(&mut &mut account_data[T::DISCRIMINATOR.len()..])?;
 
     Ok(())
 }
