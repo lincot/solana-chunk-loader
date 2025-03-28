@@ -9,7 +9,7 @@ crate-type = ["cdylib", "lib"]
 name = "chunk_loader"
 
 [features]
-default = []
+default = ["no-idl"]
 anchor-debug = ["anchor-lang/anchor-debug"]
 cpi = ["no-entrypoint"]
 no-entrypoint = []
