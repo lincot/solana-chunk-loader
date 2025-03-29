@@ -9,7 +9,7 @@ pub struct LoadChunk<'info> {
     /// CHECK: it's handled in the function body
     #[account(
         mut,
-        seeds = [b"chunk_holder", &owner.key().to_bytes(), &chunk_holder_id.to_le_bytes()],
+        seeds = [b"CHUNK_HOLDER", &owner.key().to_bytes(), &chunk_holder_id.to_le_bytes()],
         bump,
     )]
     chunk_holder: AccountInfo<'info>,
@@ -46,7 +46,7 @@ pub fn load_chunk(ctx: Context<LoadChunk>, chunk_holder_id: u32, chunk: Chunk) -
         &data,
         owner.to_account_info(),
         &[&[
-            b"chunk_holder",
+            b"CHUNK_HOLDER",
             &owner.key().to_bytes(),
             &chunk_holder_id.to_le_bytes(),
             &[ctx.bumps.chunk_holder],
