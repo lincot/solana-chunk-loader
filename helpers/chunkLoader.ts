@@ -52,7 +52,6 @@ export async function loadChunk(
       owner: owner.publicKey,
     })
     .preInstructions(preInstructions)
-    .signers([owner])
     .transaction();
 
   tx.signatures = [];
@@ -144,14 +143,13 @@ export async function passToCpi(
     })
     .remainingAccounts(accounts)
     .preInstructions(preInstructions)
-    .signers(signers.concat([owner]))
     .transaction();
 
   tx.signatures = [];
   tx.feePayer = owner.publicKey;
 
   const transactionSignature = await CHUNK_LOADER_PROGRAM.provider.connection
-    .sendTransaction(tx, [owner]);
+    .sendTransaction(tx, signers.concat([owner]));
   const latestBlockHash = await CHUNK_LOADER_PROGRAM.provider.connection
     .getLatestBlockhash();
   await CHUNK_LOADER_PROGRAM.provider.connection.confirmTransaction({
@@ -185,7 +183,6 @@ export async function closeChunks(
       chunkHolder: findChunkHolder(owner.publicKey, chunkHolderId),
     })
     .preInstructions(preInstructions)
-    .signers([owner])
     .transaction();
 
   tx.signatures = [];
