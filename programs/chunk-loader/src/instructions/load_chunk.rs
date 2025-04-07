@@ -22,7 +22,7 @@ pub fn load_chunk(ctx: Context<LoadChunk>, chunk_holder_id: u32, chunk: Chunk) -
 
     let (space, data) = if chunk_holder.data_is_empty() {
         (
-            8 + ChunkHolder::space_no_chunks() + chunk.self_space(),
+            8 + ChunkHolder::INIT_SPACE + chunk.self_space(),
             ChunkHolder {
                 owner: owner.key(),
                 chunks: vec![chunk],
