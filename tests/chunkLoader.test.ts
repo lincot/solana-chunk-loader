@@ -27,7 +27,7 @@ afterAll(async () => {
 });
 
 describe("chunk loader", () => {
-  let chunkId: number;
+  let chunkHolderId: number;
 
   test("load chunk", async () => {
     const data = Buffer.from(randomBytes(5001));
@@ -35,10 +35,10 @@ describe("chunk loader", () => {
     expect(loadByChunks({ owner, data }, MAX_CHUNK_LEN + 1)).rejects.toThrow(
       "Transaction too large",
     );
-    chunkId = await loadByChunks({ owner, data });
+    chunkHolderId = await loadByChunks({ owner, data });
 
     const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder.fetch(
-      findChunkHolder(owner.publicKey, chunkId),
+      findChunkHolder(owner.publicKey, chunkHolderId),
     );
     expect(chunkHolder.owner).toEqual(owner.publicKey);
 
@@ -56,10 +56,10 @@ describe("chunk loader", () => {
   });
 
   test("close chunks", async () => {
-    await closeChunks({ owner, chunkId });
+    await closeChunks({ owner, chunkHolderId });
     const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder
       .fetchNullable(
-        findChunkHolder(owner.publicKey, chunkId),
+        findChunkHolder(owner.publicKey, chunkHolderId),
       );
     expect(chunkHolder).toEqual(null);
   });

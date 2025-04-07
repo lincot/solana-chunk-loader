@@ -21,23 +21,23 @@ export const MAX_CHUNK_LEN = 945;
 const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
 
-export const findChunkHolder = (owner: PublicKey, chunkId: number) =>
+export const findChunkHolder = (owner: PublicKey, chunkHolderId: number) =>
   PublicKey.findProgramAddressSync([
     Buffer.from("CHUNK_HOLDER"),
     owner.toBuffer(),
-    new BN(chunkId).toArrayLike(Buffer, "le", 4),
+    new BN(chunkHolderId).toArrayLike(Buffer, "le", 4),
   ], CHUNK_LOADER_PROGRAM.programId)[0];
 
 export type LoadChunkInput = {
   owner: Keypair;
-  chunkId: number;
+  chunkHolderId: number;
   chunk: Chunk;
 };
 
 export async function loadChunk(
   {
     owner,
-    chunkId,
+    chunkHolderId,
     chunk,
   }: LoadChunkInput,
 ): Promise<{ transactionSignature: TransactionSignature }> {
@@ -46,7 +46,7 @@ export async function loadChunk(
   })];
 
   const tx = await CHUNK_LOADER_PROGRAM.methods
-    .loadChunk(chunkId, chunk)
+    .loadChunk(chunkHolderId, chunk)
     .accounts({
       owner: owner.publicKey,
     })
@@ -79,7 +79,7 @@ export async function loadByChunks({
   owner,
   data,
 }: LoadByChunksInput, maxChunkLen = MAX_CHUNK_LEN): Promise<number> {
-  const chunkId = randomInt(1 << 19);
+  const chunkHolderId = randomInt(1 << 19);
   const numExtends = Math.floor(data.length / maxChunkLen);
 
   const promises = [];
@@ -91,7 +91,7 @@ export async function loadByChunks({
           data: data.subarray(i * maxChunkLen, (i + 1) * maxChunkLen),
           index: i,
         },
-        chunkId,
+        chunkHolderId,
       }),
     );
   }
@@ -102,18 +102,18 @@ export async function loadByChunks({
         data: data.subarray(numExtends * maxChunkLen),
         index: numExtends,
       },
-      chunkId,
+      chunkHolderId: chunkHolderId,
     }),
   );
 
   await Promise.all(promises);
 
-  return chunkId;
+  return chunkHolderId;
 }
 
 export type PassToCpiInput = {
   owner: Keypair;
-  chunkId: number;
+  chunkHolderId: number;
   program: PublicKey;
   accounts: AccountMeta[];
   signers: Keypair[];
@@ -124,7 +124,7 @@ export async function passToCpi(
   {
     owner,
     program,
-    chunkId,
+    chunkHolderId,
     accounts,
     signers,
     computeUnits,
@@ -138,7 +138,7 @@ export async function passToCpi(
     .passToCpi()
     .accountsStrict({
       owner: owner.publicKey,
-      chunkHolder: findChunkHolder(owner.publicKey, chunkId),
+      chunkHolder: findChunkHolder(owner.publicKey, chunkHolderId),
       program,
     })
     .remainingAccounts(accounts)
@@ -164,13 +164,13 @@ export async function passToCpi(
 
 export type CloseChunksInput = {
   owner: Keypair;
-  chunkId: number;
+  chunkHolderId: number;
 };
 
 export async function closeChunks(
   {
     owner,
-    chunkId,
+    chunkHolderId,
   }: CloseChunksInput,
 ): Promise<{ transactionSignature: TransactionSignature }> {
   const preInstructions = [ComputeBudgetProgram.setComputeUnitLimit({
@@ -181,7 +181,7 @@ export async function closeChunks(
     .closeChunks()
     .accountsStrict({
       owner: owner.publicKey,
-      chunkHolder: findChunkHolder(owner.publicKey, chunkId),
+      chunkHolder: findChunkHolder(owner.publicKey, chunkHolderId),
     })
     .preInstructions(preInstructions)
     .signers([owner])
