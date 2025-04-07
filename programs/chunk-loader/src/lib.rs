@@ -24,5 +24,8 @@ pub mod chunk_loader {
         instructions::pass_to_cpi(ctx)
     }
 
-    // TODO: close_chunk_holder fallback
+    #[instruction(discriminator = [3])]
+    pub fn close_chunks(ctx: Context<CloseChunks>) -> Result<()> {
+        instructions::close_chunks(ctx)
+    }
 }
