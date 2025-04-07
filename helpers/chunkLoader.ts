@@ -20,6 +20,7 @@ export type Chunk = IdlTypes<ChunkLoader>["chunk"];
 export const MAX_CHUNK_LEN = 945;
 const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
+const PASS_TO_CPI_BASE_CU = 10_000;
 
 export const findChunkHolder = (owner: PublicKey, chunkHolderId: number) =>
   PublicKey.findProgramAddressSync([
@@ -117,7 +118,7 @@ export type PassToCpiInput = {
   program: PublicKey;
   accounts: AccountMeta[];
   signers: Keypair[];
-  computeUnits: number;
+  cpiComputeUnits: number;
 };
 
 export async function passToCpi(
@@ -127,11 +128,11 @@ export async function passToCpi(
     chunkHolderId,
     accounts,
     signers,
-    computeUnits,
+    cpiComputeUnits,
   }: PassToCpiInput,
 ): Promise<{ transactionSignature: TransactionSignature }> {
   const preInstructions = [ComputeBudgetProgram.setComputeUnitLimit({
-    units: computeUnits,
+    units: PASS_TO_CPI_BASE_CU + cpiComputeUnits,
   })];
 
   const tx = await CHUNK_LOADER_PROGRAM.methods
