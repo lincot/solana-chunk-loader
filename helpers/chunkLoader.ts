@@ -5,6 +5,7 @@ import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
+  sendAndConfirmTransaction,
   TransactionSignature,
 } from "@solana/web3.js";
 import { ChunkLoader } from "../target/types/chunk_loader";
@@ -54,18 +55,12 @@ export async function loadChunk(
     .preInstructions(preInstructions)
     .transaction();
 
-  tx.signatures = [];
   tx.feePayer = owner.publicKey;
-
-  const transactionSignature = await CHUNK_LOADER_PROGRAM.provider.connection
-    .sendTransaction(tx, [owner]);
-  const latestBlockHash = await CHUNK_LOADER_PROGRAM.provider.connection
-    .getLatestBlockhash();
-  await CHUNK_LOADER_PROGRAM.provider.connection.confirmTransaction({
-    blockhash: latestBlockHash.blockhash,
-    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    signature: transactionSignature,
-  });
+  const transactionSignature = await sendAndConfirmTransaction(
+    CHUNK_LOADER_PROGRAM.provider.connection,
+    tx,
+    [owner],
+  );
 
   return { transactionSignature };
 }
@@ -145,18 +140,12 @@ export async function passToCpi(
     .preInstructions(preInstructions)
     .transaction();
 
-  tx.signatures = [];
   tx.feePayer = owner.publicKey;
-
-  const transactionSignature = await CHUNK_LOADER_PROGRAM.provider.connection
-    .sendTransaction(tx, signers.concat([owner]));
-  const latestBlockHash = await CHUNK_LOADER_PROGRAM.provider.connection
-    .getLatestBlockhash();
-  await CHUNK_LOADER_PROGRAM.provider.connection.confirmTransaction({
-    blockhash: latestBlockHash.blockhash,
-    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    signature: transactionSignature,
-  });
+  const transactionSignature = await sendAndConfirmTransaction(
+    CHUNK_LOADER_PROGRAM.provider.connection,
+    tx,
+    signers.concat([owner]),
+  );
 
   return { transactionSignature };
 }
@@ -185,18 +174,12 @@ export async function closeChunks(
     .preInstructions(preInstructions)
     .transaction();
 
-  tx.signatures = [];
   tx.feePayer = owner.publicKey;
-
-  const transactionSignature = await CHUNK_LOADER_PROGRAM.provider.connection
-    .sendTransaction(tx, [owner]);
-  const latestBlockHash = await CHUNK_LOADER_PROGRAM.provider.connection
-    .getLatestBlockhash();
-  await CHUNK_LOADER_PROGRAM.provider.connection.confirmTransaction({
-    blockhash: latestBlockHash.blockhash,
-    lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    signature: transactionSignature,
-  });
+  const transactionSignature = await sendAndConfirmTransaction(
+    CHUNK_LOADER_PROGRAM.provider.connection,
+    tx,
+    [owner],
+  );
 
   return { transactionSignature };
 }
