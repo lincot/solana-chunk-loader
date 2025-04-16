@@ -1,24 +1,22 @@
-import { IdlTypes, Program } from "@coral-xyz/anchor";
 import * as anchor from "@coral-xyz/anchor";
+import { IdlTypes, Program } from "@coral-xyz/anchor";
 import {
   AccountMeta,
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
-  sendAndConfirmTransaction,
-  TransactionSignature,
+  Transaction,
 } from "@solana/web3.js";
 import { ChunkLoader } from "../target/types/chunk_loader";
 import { BN } from "bn.js";
 import { randomInt } from "crypto";
 
-anchor.setProvider(anchor.AnchorProvider.env());
 export const CHUNK_LOADER_PROGRAM: Program<ChunkLoader> =
   anchor.workspace.ChunkLoader;
 
 export type Chunk = IdlTypes<ChunkLoader>["chunk"];
 
-export const MAX_CHUNK_LEN = 945;
+export const MAX_CHUNK_LEN = 943;
 const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
 const PASS_TO_CPI_BASE_CU = 10_000;
@@ -36,33 +34,24 @@ export type LoadChunkInput = {
   chunk: Chunk;
 };
 
-export async function loadChunk(
+export function loadChunk(
   {
     owner,
     chunkHolderId,
     chunk,
   }: LoadChunkInput,
-): Promise<{ transactionSignature: TransactionSignature }> {
+): Promise<Transaction> {
   const preInstructions = [ComputeBudgetProgram.setComputeUnitLimit({
     units: LOAD_CHUNK_CU,
   })];
 
-  const tx = await CHUNK_LOADER_PROGRAM.methods
+  return CHUNK_LOADER_PROGRAM.methods
     .loadChunk(chunkHolderId, chunk)
     .accounts({
       owner: owner.publicKey,
     })
     .preInstructions(preInstructions)
     .transaction();
-
-  tx.feePayer = owner.publicKey;
-  const transactionSignature = await sendAndConfirmTransaction(
-    CHUNK_LOADER_PROGRAM.provider.connection,
-    tx,
-    [owner],
-  );
-
-  return { transactionSignature };
 }
 
 export type LoadByChunksInput = {
@@ -73,14 +62,17 @@ export type LoadByChunksInput = {
 export async function loadByChunks({
   owner,
   data,
-}: LoadByChunksInput, maxChunkLen = MAX_CHUNK_LEN): Promise<number> {
+}: LoadByChunksInput, maxChunkLen = MAX_CHUNK_LEN): Promise<{
+  transactions: Transaction[];
+  chunkHolderId: number;
+}> {
   const chunkHolderId = randomInt(1 << 19);
   const numExtends = Math.floor(data.length / maxChunkLen);
 
-  const promises = [];
+  const transactions = [];
   for (let i = 0; i < numExtends; i++) {
-    promises.push(
-      loadChunk({
+    transactions.push(
+      await loadChunk({
         owner,
         chunk: {
           data: data.subarray(i * maxChunkLen, (i + 1) * maxChunkLen),
@@ -90,8 +82,8 @@ export async function loadByChunks({
       }),
     );
   }
-  promises.push(
-    loadChunk({
+  transactions.push(
+    await loadChunk({
       owner,
       chunk: {
         data: data.subarray(numExtends * maxChunkLen),
@@ -101,9 +93,7 @@ export async function loadByChunks({
     }),
   );
 
-  await Promise.all(promises);
-
-  return chunkHolderId;
+  return { transactions, chunkHolderId };
 }
 
 export type PassToCpiInput = {
@@ -111,7 +101,6 @@ export type PassToCpiInput = {
   chunkHolderId: number;
   program: PublicKey;
   accounts: AccountMeta[];
-  signers: Keypair[];
   cpiComputeUnits: number;
 };
 
@@ -121,15 +110,14 @@ export async function passToCpi(
     program,
     chunkHolderId,
     accounts,
-    signers,
     cpiComputeUnits,
   }: PassToCpiInput,
-): Promise<{ transactionSignature: TransactionSignature }> {
+): Promise<Transaction> {
   const preInstructions = [ComputeBudgetProgram.setComputeUnitLimit({
     units: PASS_TO_CPI_BASE_CU + cpiComputeUnits,
   })];
 
-  const tx = await CHUNK_LOADER_PROGRAM.methods
+  return await CHUNK_LOADER_PROGRAM.methods
     .passToCpi()
     .accountsStrict({
       owner: owner.publicKey,
@@ -139,15 +127,6 @@ export async function passToCpi(
     .remainingAccounts(accounts)
     .preInstructions(preInstructions)
     .transaction();
-
-  tx.feePayer = owner.publicKey;
-  const transactionSignature = await sendAndConfirmTransaction(
-    CHUNK_LOADER_PROGRAM.provider.connection,
-    tx,
-    signers.concat([owner]),
-  );
-
-  return { transactionSignature };
 }
 
 export type CloseChunksInput = {
@@ -160,12 +139,12 @@ export async function closeChunks(
     owner,
     chunkHolderId,
   }: CloseChunksInput,
-): Promise<{ transactionSignature: TransactionSignature }> {
+): Promise<Transaction> {
   const preInstructions = [ComputeBudgetProgram.setComputeUnitLimit({
     units: CLOSE_CHUNKS_CU,
   })];
 
-  const tx = await CHUNK_LOADER_PROGRAM.methods
+  return await CHUNK_LOADER_PROGRAM.methods
     .closeChunks()
     .accountsStrict({
       owner: owner.publicKey,
@@ -173,13 +152,4 @@ export async function closeChunks(
     })
     .preInstructions(preInstructions)
     .transaction();
-
-  tx.feePayer = owner.publicKey;
-  const transactionSignature = await sendAndConfirmTransaction(
-    CHUNK_LOADER_PROGRAM.provider.connection,
-    tx,
-    [owner],
-  );
-
-  return { transactionSignature };
 }

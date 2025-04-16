@@ -10,6 +10,9 @@ chunk-loader = "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG"
 [programs.devnet]
 chunk-loader = "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG"
 
+[test.validator]
+warp_slot = 32
+
 [registry]
 url = "https://api.apr.dev"
 

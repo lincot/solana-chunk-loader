@@ -1,6 +1,11 @@
 import { Keypair } from "@solana/web3.js";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { disperse, setupTests, transferEverything } from "../helpers/utils";
+import {
+  disperse,
+  sendAndConfirmVersionedTx,
+  setupTests,
+  transferEverything,
+} from "../helpers/utils";
 import { randomBytes } from "crypto";
 import {
   CHUNK_LOADER_PROGRAM,
@@ -9,6 +14,7 @@ import {
   loadByChunks,
   MAX_CHUNK_LEN,
 } from "../helpers/chunkLoader";
+import { sleep } from "bun";
 
 const owner = new Keypair();
 const { connection, payer } = setupTests();
@@ -32,11 +38,36 @@ describe("chunk loader", () => {
   test("load chunk", async () => {
     const data = Buffer.from(randomBytes(5001));
 
-    expect(loadByChunks({ owner, data }, MAX_CHUNK_LEN + 1)).rejects.toThrow(
+    const { transactions } = await loadByChunks(
+      { owner, data },
+      MAX_CHUNK_LEN + 1,
+    );
+    expect(sendAndConfirmVersionedTx(
+      connection,
+      transactions[0],
+      [owner],
+      owner.publicKey,
+    )).rejects.toThrow(
       "Transaction too large",
     );
-    chunkHolderId = await loadByChunks({ owner, data });
 
+    const { transactions: transactions2, chunkHolderId: chunkHolderId2 } =
+      await loadByChunks({
+        owner,
+        data,
+      });
+    chunkHolderId = chunkHolderId2;
+
+    await Promise.all(transactions2.map((tx) =>
+      sendAndConfirmVersionedTx(
+        connection,
+        tx,
+        [owner],
+        owner.publicKey,
+      )
+    ));
+
+    await sleep(2000);
     const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder.fetch(
       findChunkHolder(owner.publicKey, chunkHolderId),
     );
@@ -56,7 +87,14 @@ describe("chunk loader", () => {
   });
 
   test("close chunks", async () => {
-    await closeChunks({ owner, chunkHolderId });
+    const tx = await closeChunks({ owner, chunkHolderId });
+
+    await sendAndConfirmVersionedTx(
+      connection,
+      tx,
+      [owner],
+      owner.publicKey,
+    );
     const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder
       .fetchNullable(
         findChunkHolder(owner.publicKey, chunkHolderId),

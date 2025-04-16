@@ -1,10 +1,15 @@
 import {
+  BlockhashWithExpiryBlockHeight,
   Connection,
   Keypair,
   PublicKey,
   sendAndConfirmTransaction,
+  Signer,
   SystemProgram,
   Transaction,
+  TransactionMessage,
+  TransactionSignature,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
@@ -84,4 +89,52 @@ export async function transferEverything(
     tx,
     [toKeypair].concat(fromKeypairs),
   );
+}
+
+export async function sendAndConfirmVersionedTx(
+  connection: Connection,
+  tx: Transaction,
+  signers: Signer[],
+  payerKey: PublicKey,
+): Promise<TransactionSignature> {
+  const { verTx, latestBlockhash } = await toVersionedTx(
+    connection,
+    tx,
+    payerKey,
+  );
+  verTx.sign(signers);
+
+  const transactionSignature = await connection
+    .sendTransaction(verTx);
+
+  await connection.confirmTransaction({
+    blockhash: latestBlockhash.blockhash,
+    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    signature: transactionSignature,
+  });
+
+  return transactionSignature;
+}
+
+async function toVersionedTx(
+  connection: Connection,
+  tx: Transaction,
+  payerKey: PublicKey,
+): Promise<
+  {
+    verTx: VersionedTransaction;
+    latestBlockhash: BlockhashWithExpiryBlockHeight;
+  }
+> {
+  const latestBlockhash = await connection.getLatestBlockhash();
+  const messageV0 = new TransactionMessage({
+    payerKey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: tx.instructions,
+  }).compileToV0Message();
+
+  return {
+    verTx: new VersionedTransaction(messageV0),
+    latestBlockhash,
+  };
 }
