@@ -11,3 +11,9 @@ the temporary account is closed to reclaim SOL.
 The `LoadChunk` transactions can be sent in parallel, confirmed and then
 followed by the `PassToCpi` transaction. So basically, no matter the size of
 the data, it takes the same time as sending two transactions sequentially.
+
+## Testing
+
+```
+anchor test --skip-local-validator --skip-deploy
+```

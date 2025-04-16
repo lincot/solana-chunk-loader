@@ -4,6 +4,8 @@
     "@types/bun": "^1.2",
     "@coral-xyz/anchor": "^0.31.0",
     "@types/bn.js": "^5.1",
+    "litesvm": "^0.2",
+    "anchor-litesvm": "^0.1.2",
     "typescript": "^5.8"
   }
 }

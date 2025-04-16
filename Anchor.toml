@@ -5,10 +5,10 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-chunk-loader = "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG"
+chunk_loader = "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG"
 
 [programs.devnet]
-chunk-loader = "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG"
+chunk_loader = "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG"
 
 [test.validator]
 warp_slot = 32

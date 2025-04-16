@@ -1,22 +1,24 @@
-import * as anchor from "@coral-xyz/anchor";
 import { IdlTypes, Program } from "@coral-xyz/anchor";
 import {
   AccountMeta,
   ComputeBudgetProgram,
-  Keypair,
   PublicKey,
   Transaction,
 } from "@solana/web3.js";
 import { ChunkLoader } from "../target/types/chunk_loader";
+import chunkLoaderIdl from "../target/idl/chunk_loader.json";
 import { BN } from "bn.js";
 import { randomInt } from "crypto";
+import { mockProvider } from "./utils";
 
-export const CHUNK_LOADER_PROGRAM: Program<ChunkLoader> =
-  anchor.workspace.ChunkLoader;
+const CHUNK_LOADER_PROGRAM: Program<ChunkLoader> = new Program(
+  chunkLoaderIdl as ChunkLoader,
+  mockProvider,
+);
 
 export type Chunk = IdlTypes<ChunkLoader>["chunk"];
 
-export const MAX_CHUNK_LEN = 943;
+export const MAX_CHUNK_LEN = 945;
 const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
 const PASS_TO_CPI_BASE_CU = 10_000;
@@ -29,12 +31,12 @@ export const findChunkHolder = (owner: PublicKey, chunkHolderId: number) =>
   ], CHUNK_LOADER_PROGRAM.programId)[0];
 
 export type LoadChunkInput = {
-  owner: Keypair;
+  owner: PublicKey;
   chunkHolderId: number;
   chunk: Chunk;
 };
 
-export function loadChunk(
+export async function loadChunk(
   {
     owner,
     chunkHolderId,
@@ -45,17 +47,15 @@ export function loadChunk(
     units: LOAD_CHUNK_CU,
   })];
 
-  return CHUNK_LOADER_PROGRAM.methods
+  return await CHUNK_LOADER_PROGRAM.methods
     .loadChunk(chunkHolderId, chunk)
-    .accounts({
-      owner: owner.publicKey,
-    })
+    .accounts({ owner })
     .preInstructions(preInstructions)
     .transaction();
 }
 
 export type LoadByChunksInput = {
-  owner: Keypair;
+  owner: PublicKey;
   data: Buffer;
 };
 
@@ -97,7 +97,7 @@ export async function loadByChunks({
 }
 
 export type PassToCpiInput = {
-  owner: Keypair;
+  owner: PublicKey;
   chunkHolderId: number;
   program: PublicKey;
   accounts: AccountMeta[];
@@ -120,8 +120,8 @@ export async function passToCpi(
   return await CHUNK_LOADER_PROGRAM.methods
     .passToCpi()
     .accountsStrict({
-      owner: owner.publicKey,
-      chunkHolder: findChunkHolder(owner.publicKey, chunkHolderId),
+      owner,
+      chunkHolder: findChunkHolder(owner, chunkHolderId),
       program,
     })
     .remainingAccounts(accounts)
@@ -130,7 +130,7 @@ export async function passToCpi(
 }
 
 export type CloseChunksInput = {
-  owner: Keypair;
+  owner: PublicKey;
   chunkHolderId: number;
 };
 
@@ -147,8 +147,8 @@ export async function closeChunks(
   return await CHUNK_LOADER_PROGRAM.methods
     .closeChunks()
     .accountsStrict({
-      owner: owner.publicKey,
-      chunkHolder: findChunkHolder(owner.publicKey, chunkHolderId),
+      owner,
+      chunkHolder: findChunkHolder(owner, chunkHolderId),
     })
     .preInstructions(preInstructions)
     .transaction();
