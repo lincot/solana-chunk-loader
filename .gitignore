@@ -5,6 +5,3 @@ node_modules
 target
 test-ledger
 .yarn
-
-keys/admin.json
-keys/entangle.json

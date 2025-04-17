@@ -5,10 +5,9 @@ import {
   PublicKey,
   Transaction,
 } from "@solana/web3.js";
-import { ChunkLoader } from "../target/types/chunk_loader";
-import chunkLoaderIdl from "../target/idl/chunk_loader.json";
+import { ChunkLoader } from "./idl/chunk_loader";
+import chunkLoaderIdl from "./idl/chunk_loader.json";
 import { BN } from "bn.js";
-import { randomInt } from "crypto";
 import { mockProvider } from "./utils";
 
 const CHUNK_LOADER_PROGRAM: Program<ChunkLoader> = new Program(
@@ -20,7 +19,7 @@ export type Chunk = IdlTypes<ChunkLoader>["chunk"];
 
 /**
  * Maximum chunk length when sending legacy transactions.
-*/
+ */
 export const MAX_CHUNK_LEN = 945;
 const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
@@ -60,16 +59,14 @@ export async function loadChunk(
 export type LoadByChunksInput = {
   owner: PublicKey;
   data: Buffer;
+  chunkHolderId: number;
 };
 
 export async function loadByChunks({
   owner,
   data,
-}: LoadByChunksInput, maxChunkLen = MAX_CHUNK_LEN): Promise<{
-  transactions: Transaction[];
-  chunkHolderId: number;
-}> {
-  const chunkHolderId = randomInt(1 << 19);
+  chunkHolderId,
+}: LoadByChunksInput, maxChunkLen = MAX_CHUNK_LEN): Promise<Transaction[]> {
   const numExtends = Math.floor(data.length / maxChunkLen);
 
   const transactions = [];
@@ -96,7 +93,7 @@ export async function loadByChunks({
     }),
   );
 
-  return { transactions, chunkHolderId };
+  return transactions;
 }
 
 export type PassToCpiInput = {

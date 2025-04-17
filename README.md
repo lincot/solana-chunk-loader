@@ -15,5 +15,9 @@ the data, it takes the same time as sending two transactions sequentially.
 ## Testing
 
 ```
-anchor test --skip-local-validator --skip-deploy
+anchor build
+cp target/idl/chunk_loader.json target/types/chunk_loader.ts chunk-loader-ts-sdk/src/idl/
+bun install
+bun run build:sdk
+bun test
 ```

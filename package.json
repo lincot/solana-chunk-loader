@@ -1,5 +1,6 @@
 {
   "type": "module",
+  "workspaces": ["ts-sdk"],
   "devDependencies": {
     "@types/bun": "^1.2",
     "@coral-xyz/anchor": "^0.31.0",
@@ -7,5 +8,8 @@
     "litesvm": "^0.2",
     "anchor-litesvm": "^0.1.2",
     "typescript": "^5.8"
+  },
+  "scripts": {
+    "build:sdk": "bun run --cwd ts-sdk build"
   }
 }

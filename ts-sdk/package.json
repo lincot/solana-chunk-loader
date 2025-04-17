@@ -1,0 +1,28 @@
+{
+  "name": "@lincot/solana-chunk-loader",
+  "version": "0.1.0",
+  "description": "Helpers for the Chunk Loader Solana program",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "peerDependencies": {
+    "@coral-xyz/anchor": "^0.31.0",
+    "@solana/web3.js": "^1.69.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.4"
+  },
+  "scripts": {
+    "build:esm": "bun build src/index.ts --outdir dist --format esm   --sourcemap --minify --target browser --external:@coral-xyz/anchor,@solana/web3.js --outfile dist/index.mjs",
+    "build:cjs": "bun build src/index.ts --outdir dist --format cjs   --sourcemap --minify --target node    --external:@coral-xyz/anchor,@solana/web3.js --outfile dist/index.js",
+    "build:dts": "tsc --emitDeclarationOnly --declaration --outDir dist",
+    "build": "bun run build:esm && bun run build:cjs && bun run build:dts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "keywords": ["solana", "blockchain"]
+}

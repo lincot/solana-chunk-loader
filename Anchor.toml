@@ -19,6 +19,3 @@ url = "https://api.apr.dev"
 [provider]
 cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
-
-[scripts]
-test = "bun test --timeout 0 tests"

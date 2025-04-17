@@ -1,12 +1,12 @@
 import { Keypair, Transaction } from "@solana/web3.js";
 import { describe, expect, test } from "bun:test";
-import { randomBytes } from "crypto";
+import { randomBytes, randomInt } from "crypto";
 import {
   closeChunks,
   findChunkHolder,
   loadByChunks,
   MAX_CHUNK_LEN,
-} from "../helpers/chunkLoader";
+} from "@lincot/solana-chunk-loader";
 import { ChunkLoader } from "../target/types/chunk_loader";
 import chunkLoaderIdl from "../target/idl/chunk_loader.json";
 import { Program } from "@coral-xyz/anchor";
@@ -38,22 +38,24 @@ const sendTx = (tx: Transaction, payer: Keypair) => {
 };
 
 describe("chunk loader", () => {
-  let chunkHolderId: number;
+  let chunkHolderId = randomInt(1 << 19);
 
   test("load chunk", async () => {
     const data = Buffer.from(randomBytes(5001));
 
-    const { transactions } = await loadByChunks(
-      { owner: owner.publicKey, data },
+    const transactions = await loadByChunks(
+      { owner: owner.publicKey, data, chunkHolderId: randomInt(1 << 19) },
       MAX_CHUNK_LEN + 1,
     );
 
     expect(new Promise(() => sendTx(transactions[0], owner))).rejects
       .toThrow("Transaction too large");
 
-    const { transactions: transactions2, chunkHolderId: chunkHolderId2 } =
-      await loadByChunks({ owner: owner.publicKey, data });
-    chunkHolderId = chunkHolderId2;
+    const transactions2 = await loadByChunks({
+      owner: owner.publicKey,
+      data,
+      chunkHolderId,
+    });
 
     for (const tx of transactions2) {
       sendTx(tx, owner);
