@@ -1,8 +1,11 @@
 [package]
-name = "chunk-loader"
-version = "0.1.0"
-description = "Created with Anchor"
+authors = ["lincot <lincot@disroot.org>"]
+description = "Utility Solana program to send instruction data by chunks"
 edition = "2021"
+keywords = ["blockchain", "solana"]
+license = "MIT"
+name = "solana-chunk-loader"
+version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]

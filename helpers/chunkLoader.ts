@@ -18,6 +18,9 @@ const CHUNK_LOADER_PROGRAM: Program<ChunkLoader> = new Program(
 
 export type Chunk = IdlTypes<ChunkLoader>["chunk"];
 
+/**
+ * Maximum chunk length when sending legacy transactions.
+*/
 export const MAX_CHUNK_LEN = 945;
 const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;

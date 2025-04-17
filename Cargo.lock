@@ -440,14 +440,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
-name = "chunk-loader"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "solana-invoke",
-]
-
-[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1221,6 +1213,14 @@ checksum = "718333bcd0a1a7aed6655aa66bef8d7fb047944922b2d3a18f49cbc13e73d004"
 dependencies = [
  "borsh 0.10.4",
  "borsh 1.5.5",
+]
+
+[[package]]
+name = "solana-chunk-loader"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "solana-invoke",
 ]
 
 [[package]]

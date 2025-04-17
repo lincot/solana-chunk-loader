@@ -1,6 +1,6 @@
-# Chunk Loader
+# Solana Chunk Loader
 
-Chunk loader is a general-purpose Solana program that can be used to send
+Chunk Loader is a general-purpose Solana program that can be used to send
 transactions in chunks when the arguments of an instruction don't fit into
 a single transaction.
 
