@@ -1,11 +1,11 @@
-import { Keypair, Transaction } from "@solana/web3.js";
+import { Keypair, Signer } from "@solana/web3.js";
 import { describe, expect, test } from "bun:test";
 import { randomBytes, randomInt } from "crypto";
 import {
-  closeChunks,
-  findChunkHolder,
-  loadByChunks,
+  getChunkLoader,
+  InstructionWithCu,
   MAX_CHUNK_LEN,
+  toTransaction,
 } from "@lincot/solana-chunk-loader";
 import { ChunkLoader } from "../target/types/chunk_loader";
 import chunkLoaderIdl from "../target/idl/chunk_loader.json";
@@ -20,14 +20,13 @@ const CHUNK_LOADER_PROGRAM: Program<ChunkLoader> = new Program(
   chunkLoaderIdl as ChunkLoader,
   provider,
 );
+const chunkLoader = getChunkLoader(CHUNK_LOADER_PROGRAM);
 
 const owner = new Keypair();
 svm.airdrop(owner.publicKey, BigInt(40_000_000_000));
 
-const sendTx = (tx: Transaction, payer: Keypair) => {
-  tx.recentBlockhash = svm.latestBlockhash();
-  tx.sign(payer);
-  tx.feePayer = payer.publicKey;
+const sendTx = (ixs: InstructionWithCu[], payer: Signer = owner) => {
+  const tx = toTransaction(ixs, svm.latestBlockhash(), payer);
   const res = svm.sendTransaction(tx);
   if (res instanceof FailedTransactionMetadata) {
     throw new Error(
@@ -38,41 +37,32 @@ const sendTx = (tx: Transaction, payer: Keypair) => {
 };
 
 describe("chunk loader", () => {
-  let chunkHolderId = randomInt(1 << 19);
+  const chunkHolderId = randomInt(1 << 19);
 
   test("load chunk", async () => {
     const data = Buffer.from(randomBytes(5001));
 
-    const transactions = await loadByChunks(
+    const instructions = await chunkLoader.loadByChunks(
       { owner: owner.publicKey, data, chunkHolderId: randomInt(1 << 19) },
       MAX_CHUNK_LEN + 1,
     );
+    expect(() => sendTx([instructions[0]])).toThrow("Transaction too large");
 
-    expect(new Promise(() => sendTx(transactions[0], owner))).rejects
-      .toThrow("Transaction too large");
-
-    const transactions2 = await loadByChunks({
+    const instructions2 = await chunkLoader.loadByChunks({
       owner: owner.publicKey,
       data,
       chunkHolderId,
     });
-
-    for (const tx of transactions2) {
-      sendTx(tx, owner);
+    for (const ix of instructions2) {
+      sendTx([ix]);
     }
 
     const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder.fetch(
-      findChunkHolder(owner.publicKey, chunkHolderId),
+      chunkLoader.findChunkHolder({ owner: owner.publicKey, chunkHolderId }),
     );
     expect(chunkHolder.owner).toEqual(owner.publicKey);
 
-    const sortedChunks = chunkHolder.chunks.sort((a, b) => {
-      if (a.index < b.index) {
-        return -1;
-      } else {
-        return 1;
-      }
-    });
+    const sortedChunks = chunkHolder.chunks.sort((a, b) => a.index - b.index);
 
     expect(sortedChunks.length).toEqual(6);
     const sortedData = Buffer.concat(sortedChunks.map((x) => x.data));
@@ -80,12 +70,15 @@ describe("chunk loader", () => {
   });
 
   test("close chunks", async () => {
-    const tx = await closeChunks({ owner: owner.publicKey, chunkHolderId });
-    sendTx(tx, owner);
+    const ix = await chunkLoader.closeChunks({
+      owner: owner.publicKey,
+      chunkHolderId,
+    });
+    sendTx([ix]);
 
     const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder
       .fetchNullable(
-        findChunkHolder(owner.publicKey, chunkHolderId),
+        chunkLoader.findChunkHolder({ owner: owner.publicKey, chunkHolderId }),
       );
     expect(chunkHolder).toEqual(null);
   });

@@ -1,6 +1,6 @@
 {
   "name": "@lincot/solana-chunk-loader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Helpers for the Chunk Loader Solana program",
   "type": "module",
   "main": "dist/index.js",
@@ -23,6 +23,7 @@
   "publishConfig": {
     "access": "public"
   },
+  "sideEffects": false,
   "license": "MIT",
   "keywords": ["solana", "blockchain"]
 }

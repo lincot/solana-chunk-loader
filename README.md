@@ -14,9 +14,9 @@ the data, it takes the same time as sending two transactions sequentially.
 
 ## Testing
 
-```
+```sh
 anchor build
-cp target/idl/chunk_loader.json target/types/chunk_loader.ts chunk-loader-ts-sdk/src/idl/
+cp target/idl/chunk_loader.json target/types/chunk_loader.ts ts-sdk/src/idl/
 bun install
 bun run build:sdk
 bun test

@@ -5,53 +5,53 @@
  * IDL can be found at `target/idl/chunk_loader.json`.
  */
 export type ChunkLoader = {
-  "address": "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG",
+  "address": "ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG";
   "metadata": {
-    "name": "chunkLoader",
-    "version": "0.1.0",
-    "spec": "0.1.0",
-    "description": "Utility Solana program to send instruction data by chunks"
-  },
+    "name": "chunkLoader";
+    "version": "0.1.0";
+    "spec": "0.1.0";
+    "description": "Utility Solana program to send instruction data by chunks";
+  };
   "instructions": [
     {
-      "name": "closeChunks",
+      "name": "closeChunks";
       "discriminator": [
-        3
-      ],
+        3,
+      ];
       "accounts": [
         {
-          "name": "owner",
-          "writable": true,
-          "signer": true,
+          "name": "owner";
+          "writable": true;
+          "signer": true;
           "relations": [
-            "chunkHolder"
-          ]
+            "chunkHolder",
+          ];
         },
         {
-          "name": "chunkHolder",
-          "writable": true
-        }
-      ],
-      "args": []
+          "name": "chunkHolder";
+          "writable": true;
+        },
+      ];
+      "args": [];
     },
     {
-      "name": "loadChunk",
+      "name": "loadChunk";
       "discriminator": [
-        1
-      ],
+        1,
+      ];
       "accounts": [
         {
-          "name": "owner",
-          "writable": true,
-          "signer": true
+          "name": "owner";
+          "writable": true;
+          "signer": true;
         },
         {
-          "name": "chunkHolder",
-          "writable": true,
+          "name": "chunkHolder";
+          "writable": true;
           "pda": {
             "seeds": [
               {
-                "kind": "const",
+                "kind": "const";
                 "value": [
                   67,
                   72,
@@ -64,111 +64,111 @@ export type ChunkLoader = {
                   76,
                   68,
                   69,
-                  82
-                ]
+                  82,
+                ];
               },
               {
-                "kind": "account",
-                "path": "owner"
+                "kind": "account";
+                "path": "owner";
               },
               {
-                "kind": "arg",
-                "path": "chunkHolderId"
-              }
-            ]
-          }
+                "kind": "arg";
+                "path": "chunkHolderId";
+              },
+            ];
+          };
         },
         {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
+          "name": "systemProgram";
+          "address": "11111111111111111111111111111111";
+        },
+      ];
       "args": [
         {
-          "name": "chunkHolderId",
-          "type": "u32"
+          "name": "chunkHolderId";
+          "type": "u32";
         },
         {
-          "name": "chunk",
+          "name": "chunk";
           "type": {
             "defined": {
-              "name": "chunk"
-            }
-          }
-        }
-      ]
+              "name": "chunk";
+            };
+          };
+        },
+      ];
     },
     {
-      "name": "passToCpi",
+      "name": "passToCpi";
       "discriminator": [
-        2
-      ],
+        2,
+      ];
       "accounts": [
         {
-          "name": "owner",
-          "writable": true,
-          "signer": true,
+          "name": "owner";
+          "writable": true;
+          "signer": true;
           "relations": [
-            "chunkHolder"
-          ]
+            "chunkHolder",
+          ];
         },
         {
-          "name": "chunkHolder",
-          "writable": true
+          "name": "chunkHolder";
+          "writable": true;
         },
         {
-          "name": "program"
-        }
-      ],
-      "args": []
-    }
-  ],
+          "name": "program";
+        },
+      ];
+      "args": [];
+    },
+  ];
   "accounts": [
     {
-      "name": "chunkHolder",
+      "name": "chunkHolder";
       "discriminator": [
-        1
-      ]
-    }
-  ],
+        1,
+      ];
+    },
+  ];
   "types": [
     {
-      "name": "chunk",
+      "name": "chunk";
       "type": {
-        "kind": "struct",
+        "kind": "struct";
         "fields": [
           {
-            "name": "index",
-            "type": "u8"
+            "name": "index";
+            "type": "u8";
           },
           {
-            "name": "data",
-            "type": "bytes"
-          }
-        ]
-      }
+            "name": "data";
+            "type": "bytes";
+          },
+        ];
+      };
     },
     {
-      "name": "chunkHolder",
+      "name": "chunkHolder";
       "type": {
-        "kind": "struct",
+        "kind": "struct";
         "fields": [
           {
-            "name": "owner",
-            "type": "pubkey"
+            "name": "owner";
+            "type": "pubkey";
           },
           {
-            "name": "chunks",
+            "name": "chunks";
             "type": {
               "vec": {
                 "defined": {
-                  "name": "chunk"
-                }
-              }
-            }
-          }
-        ]
-      }
-    }
-  ]
+                  "name": "chunk";
+                };
+              };
+            };
+          },
+        ];
+      };
+    },
+  ];
 };
