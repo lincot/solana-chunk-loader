@@ -1,7 +1,9 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AccountsCoder, AnchorProvider, Coder } from "@coral-xyz/anchor";
 import {
+  Commitment,
   ComputeBudgetProgram,
   Connection,
+  GetAccountInfoConfig,
   PublicKey,
   Signer,
   Transaction,
@@ -45,3 +47,19 @@ export const toTransaction = (
   tx.sign(feePayer);
   return tx;
 };
+
+export async function fetchAccount<T>(
+  connection: Connection,
+  coder: Coder<string, string>,
+  publicKey: PublicKey,
+  accountName: string,
+  commitmentOrConfig?: Commitment | GetAccountInfoConfig,
+): Promise<T | null> {
+  const acc = await connection.getAccountInfo(publicKey, commitmentOrConfig);
+
+  if (!acc || acc.data === null || acc.data.length === 0) {
+    return null;
+  }
+
+  return coder.accounts.decode<T>(accountName, acc.data);
+}

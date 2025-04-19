@@ -1,23 +1,25 @@
 import { IdlTypes, Program } from "@coral-xyz/anchor";
-import { AccountMeta, PublicKey } from "@solana/web3.js";
+import {
+  AccountMeta,
+  Commitment,
+  Connection,
+  GetAccountInfoConfig,
+  PublicKey,
+} from "@solana/web3.js";
 import { ChunkLoader } from "./idl/chunk_loader";
 import chunkLoaderIdl from "./idl/chunk_loader.json";
 import BN from "bn.js";
 import {
   cuLimitInstruction,
+  fetchAccount,
   InstructionWithCu,
   mockProvider,
   toTransaction,
 } from "./utils";
 
-export {
-  ChunkLoader,
-  chunkLoaderIdl,
-  cuLimitInstruction,
-  InstructionWithCu,
-  toTransaction,
-};
+export { cuLimitInstruction, InstructionWithCu, toTransaction };
 
+export type ChunkHolder = IdlTypes<ChunkLoader>["chunkHolder"];
 export type Chunk = IdlTypes<ChunkLoader>["chunk"];
 
 /**
@@ -28,36 +30,21 @@ const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
 const PASS_TO_CPI_BASE_CU = 10_000;
 
-export function getChunkLoader(
-  program: Program<ChunkLoader> = new Program(
-    chunkLoaderIdl as ChunkLoader,
-    mockProvider,
-  ),
-) {
-  return {
-    findChunkHolder: (p: FindChunkHolderParams) => findChunkHolder(program, p),
-    loadChunk: (p: LoadChunkParams) => loadChunk(program, p),
-    loadByChunks: (p: LoadByChunksParams, m = MAX_CHUNK_LEN) =>
-      loadByChunks(program, p, m),
-    passToCpi: (p: PassToCpiParams) => passToCpi(program, p),
-    closeChunks: (p: CloseChunksParams) => closeChunks(program, p),
-  };
-}
+const CHUNK_LOADER_PROGRAM = new Program(chunkLoaderIdl, mockProvider);
 
 export type FindChunkHolderParams = {
   owner: PublicKey;
   chunkHolderId: number;
 };
 
-const findChunkHolder = (
-  program: Program<ChunkLoader>,
+export const findChunkHolder = (
   { owner, chunkHolderId }: FindChunkHolderParams,
 ) =>
   PublicKey.findProgramAddressSync([
     Buffer.from("CHUNK_HOLDER"),
     owner.toBuffer(),
     new BN(chunkHolderId).toArrayLike(Buffer, "le", 4),
-  ], program.programId)[0];
+  ], CHUNK_LOADER_PROGRAM.programId)[0];
 
 export type LoadChunkParams = {
   owner: PublicKey;
@@ -65,12 +52,12 @@ export type LoadChunkParams = {
   chunk: Chunk;
 };
 
-async function loadChunk(program: Program<ChunkLoader>, {
+async function loadChunk({
   owner,
   chunkHolderId,
   chunk,
 }: LoadChunkParams): Promise<InstructionWithCu> {
-  const instruction = await program.methods
+  const instruction = await CHUNK_LOADER_PROGRAM.methods
     .loadChunk(chunkHolderId, chunk)
     .accounts({ owner })
     .instruction();
@@ -84,23 +71,23 @@ export type LoadByChunksParams = {
   chunkHolderId: number;
 };
 
-async function loadByChunks(program: Program<ChunkLoader>, {
+export async function loadByChunks({
   owner,
   data,
   chunkHolderId,
 }: LoadByChunksParams, chunkLen = MAX_CHUNK_LEN): Promise<InstructionWithCu[]> {
-  const instructions = [];
+  const ixs = [];
   for (let index = 0, offset = 0; offset < data.length; index++) {
     const slice = data.subarray(offset, offset += chunkLen);
-    instructions.push(
-      await loadChunk(program, {
+    ixs.push(
+      await loadChunk({
         owner,
         chunkHolderId,
         chunk: { data: slice, index },
       }),
     );
   }
-  return instructions;
+  return ixs;
 }
 
 export type PassToCpiParams = {
@@ -111,8 +98,7 @@ export type PassToCpiParams = {
   cpiComputeUnits: number;
 };
 
-async function passToCpi(
-  program_: Program<ChunkLoader>,
+export async function passToCpi(
   {
     owner,
     program,
@@ -121,11 +107,11 @@ async function passToCpi(
     cpiComputeUnits,
   }: PassToCpiParams,
 ): Promise<InstructionWithCu> {
-  const instruction = await program_.methods
+  const instruction = await CHUNK_LOADER_PROGRAM.methods
     .passToCpi()
     .accountsStrict({
       owner,
-      chunkHolder: findChunkHolder(program_, { owner, chunkHolderId }),
+      chunkHolder: findChunkHolder({ owner, chunkHolderId }),
       program,
     })
     .remainingAccounts(accounts)
@@ -139,17 +125,31 @@ export type CloseChunksParams = {
   chunkHolderId: number;
 };
 
-async function closeChunks(program: Program<ChunkLoader>, {
+export async function closeChunks({
   owner,
   chunkHolderId,
 }: CloseChunksParams): Promise<InstructionWithCu> {
-  const instruction = await program.methods
+  const instruction = await CHUNK_LOADER_PROGRAM.methods
     .closeChunks()
     .accountsStrict({
       owner,
-      chunkHolder: findChunkHolder(program, { owner, chunkHolderId }),
+      chunkHolder: findChunkHolder({ owner, chunkHolderId }),
     })
     .instruction();
 
   return { instruction, cuLimit: CLOSE_CHUNKS_CU };
+}
+
+export async function fetchChunkHolder(
+  connection: Connection,
+  publicKey: PublicKey,
+  commitmentOrConfig?: Commitment | GetAccountInfoConfig,
+): Promise<ChunkHolder | null> {
+  return await fetchAccount(
+    connection,
+    CHUNK_LOADER_PROGRAM.coder,
+    publicKey,
+    "chunkHolder",
+    commitmentOrConfig,
+  );
 }

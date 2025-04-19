@@ -1,26 +1,22 @@
-import { Keypair, Signer } from "@solana/web3.js";
+import { Connection, Keypair, Signer } from "@solana/web3.js";
 import { describe, expect, test } from "bun:test";
 import { randomBytes, randomInt } from "crypto";
 import {
-  getChunkLoader,
+  closeChunks,
+  fetchChunkHolder,
+  findChunkHolder,
   InstructionWithCu,
+  loadByChunks,
   MAX_CHUNK_LEN,
   toTransaction,
 } from "@lincot/solana-chunk-loader";
-import { ChunkLoader } from "../target/types/chunk_loader";
-import chunkLoaderIdl from "../target/idl/chunk_loader.json";
-import { Program } from "@coral-xyz/anchor";
-import { fromWorkspace, LiteSVMProvider } from "anchor-litesvm";
+import { fromWorkspace } from "anchor-litesvm";
 import { FailedTransactionMetadata } from "litesvm";
+import { LiteSVMConnection } from "../helpers/utils";
 
 const svm = fromWorkspace(".");
-const provider = new LiteSVMProvider(svm);
 
-const CHUNK_LOADER_PROGRAM: Program<ChunkLoader> = new Program(
-  chunkLoaderIdl as ChunkLoader,
-  provider,
-);
-const chunkLoader = getChunkLoader(CHUNK_LOADER_PROGRAM);
+const connection = new LiteSVMConnection(svm) as unknown as Connection;
 
 const owner = new Keypair();
 svm.airdrop(owner.publicKey, BigInt(40_000_000_000));
@@ -42,13 +38,13 @@ describe("chunk loader", () => {
   test("load chunk", async () => {
     const data = Buffer.from(randomBytes(5001));
 
-    const instructions = await chunkLoader.loadByChunks(
+    const instructions = await loadByChunks(
       { owner: owner.publicKey, data, chunkHolderId: randomInt(1 << 19) },
       MAX_CHUNK_LEN + 1,
     );
     expect(() => sendTx([instructions[0]])).toThrow("Transaction too large");
 
-    const instructions2 = await chunkLoader.loadByChunks({
+    const instructions2 = await loadByChunks({
       owner: owner.publicKey,
       data,
       chunkHolderId,
@@ -57,8 +53,9 @@ describe("chunk loader", () => {
       sendTx([ix]);
     }
 
-    const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder.fetch(
-      chunkLoader.findChunkHolder({ owner: owner.publicKey, chunkHolderId }),
+    const chunkHolder = await fetchChunkHolder(
+      connection,
+      findChunkHolder({ owner: owner.publicKey, chunkHolderId }),
     );
     expect(chunkHolder.owner).toEqual(owner.publicKey);
 
@@ -70,16 +67,16 @@ describe("chunk loader", () => {
   });
 
   test("close chunks", async () => {
-    const ix = await chunkLoader.closeChunks({
+    const ix = await closeChunks({
       owner: owner.publicKey,
       chunkHolderId,
     });
     sendTx([ix]);
 
-    const chunkHolder = await CHUNK_LOADER_PROGRAM.account.chunkHolder
-      .fetchNullable(
-        chunkLoader.findChunkHolder({ owner: owner.publicKey, chunkHolderId }),
-      );
+    const chunkHolder = await fetchChunkHolder(
+      connection,
+      findChunkHolder({ owner: owner.publicKey, chunkHolderId }),
+    );
     expect(chunkHolder).toEqual(null);
   });
 });
