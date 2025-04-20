@@ -1,6 +1,6 @@
 {
   "name": "@lincot/solana-chunk-loader",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Helpers for the Chunk Loader Solana program",
   "type": "module",
   "main": "dist/index.js",

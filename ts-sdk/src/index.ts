@@ -23,14 +23,15 @@ export type ChunkHolder = IdlTypes<ChunkLoader>["chunkHolder"];
 export type Chunk = IdlTypes<ChunkLoader>["chunk"];
 
 /**
- * Maximum chunk length when sending legacy transactions.
+ * Maximum chunk length when sending versioned transactions.
  */
-export const MAX_CHUNK_LEN = 945;
+export const MAX_CHUNK_LEN = 943;
 const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
 const PASS_TO_CPI_BASE_CU = 10_000;
 
 const CHUNK_LOADER_PROGRAM = new Program(chunkLoaderIdl, mockProvider);
+export const PROGRAM_ID = CHUNK_LOADER_PROGRAM.programId;
 
 export type FindChunkHolderParams = {
   owner: PublicKey;

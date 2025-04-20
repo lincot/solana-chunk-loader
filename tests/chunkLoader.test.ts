@@ -14,6 +14,8 @@ import { fromWorkspace } from "anchor-litesvm";
 import { FailedTransactionMetadata } from "litesvm";
 import { LiteSVMConnection } from "../helpers/utils";
 
+const VERSIONED_TX_OVERHEAD = 2;
+
 const svm = fromWorkspace(".");
 
 const connection = new LiteSVMConnection(svm) as unknown as Connection;
@@ -40,7 +42,7 @@ describe("chunk loader", () => {
 
     const instructions = await loadByChunks(
       { owner: owner.publicKey, data, chunkHolderId: randomInt(1 << 19) },
-      MAX_CHUNK_LEN + 1,
+      MAX_CHUNK_LEN + VERSIONED_TX_OVERHEAD + 1,
     );
     expect(() => sendTx([instructions[0]])).toThrow("Transaction too large");
 
@@ -48,7 +50,7 @@ describe("chunk loader", () => {
       owner: owner.publicKey,
       data,
       chunkHolderId,
-    });
+    }, MAX_CHUNK_LEN + VERSIONED_TX_OVERHEAD);
     for (const ix of instructions2) {
       sendTx([ix]);
     }
