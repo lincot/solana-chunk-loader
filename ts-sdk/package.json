@@ -1,10 +1,21 @@
 {
   "name": "@lincot/solana-chunk-loader",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "Helpers for the Chunk Loader Solana program",
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.node.mjs",
+  "browser": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "browser": "./dist/index.mjs",
+      "node": "./dist/index.node.mjs",
+      "bun": "./dist/index.node.mjs",
+      "import": "./dist/index.node.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.node.mjs"
+    }
+  },
   "types": "dist/index.d.ts",
   "files": ["dist"],
   "peerDependencies": {
@@ -15,10 +26,11 @@
     "typescript": "^5.4.4"
   },
   "scripts": {
-    "build:esm": "bun build src/index.ts --outdir dist --format esm   --sourcemap --minify --target browser --external:@coral-xyz/anchor,@solana/web3.js --outfile dist/index.mjs",
-    "build:cjs": "bun build src/index.ts --outdir dist --format cjs   --sourcemap --minify --target node    --external:@coral-xyz/anchor,@solana/web3.js --outfile dist/index.js",
-    "build:dts": "tsc --emitDeclarationOnly --declaration --outDir dist",
-    "build": "bun run build:esm && bun run build:cjs && bun run build:dts"
+    "build:browser-esm": "bun build src/index.ts --format esm --target browser --minify --sourcemap --external:@coral-xyz/anchor,@solana/web3.js --outdir dist --entry-naming '[name].mjs'",
+    "build:node-esm": "bun build src/index.ts --format esm --target node    --minify --sourcemap --external:@coral-xyz/anchor,@solana/web3.js --outdir dist --entry-naming '[name].node.mjs'",
+    "build:cjs": "bun build src/index.ts --format cjs --target node    --minify --sourcemap --external:@coral-xyz/anchor,@solana/web3.js --outdir dist --entry-naming '[name].cjs'",
+    "build:dts": "tsc --emitDeclarationOnly --declaration",
+    "build": "bun run build:browser-esm && bun run build:node-esm && bun run build:cjs && bun run build:dts"
   },
   "publishConfig": {
     "access": "public"
