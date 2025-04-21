@@ -1,6 +1,6 @@
 {
   "name": "@lincot/solana-chunk-loader",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Helpers for the Chunk Loader Solana program",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -8,6 +8,7 @@
   "browser": "./dist/index.mjs",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "browser": "./dist/index.mjs",
       "node": "./dist/index.node.mjs",
       "bun": "./dist/index.node.mjs",
