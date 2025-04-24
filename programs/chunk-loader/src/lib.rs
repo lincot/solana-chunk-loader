@@ -10,6 +10,14 @@ mod utils;
 // DO NOT EDIT the address manually. Instead, run `./switch-env.sh`
 declare_id!("ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG");
 
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "Chunk Loader",
+    project_url: "https://crates.io/crates/solana-chunk-loader",
+    contacts: "email:lincot@disroot.org,discord:lincot",
+    policy: "Please contact us if you have discovered a bug"
+}
+
 #[program]
 pub mod chunk_loader {
     use super::*;
