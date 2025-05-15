@@ -1,4 +1,4 @@
-import { IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
 import {
   AccountMeta,
   Commitment,
@@ -10,10 +10,10 @@ import { ChunkLoader } from "./idl/chunk_loader";
 import chunkLoaderIdl from "./idl/chunk_loader.json";
 import BN from "bn.js";
 import {
+  createStubObject,
   cuLimitInstruction,
   fetchAccount,
   InstructionWithCu,
-  mockProvider,
   toTransaction,
 } from "./utils";
 
@@ -30,8 +30,15 @@ const LOAD_CHUNK_CU = 15_000;
 const CLOSE_CHUNKS_CU = 10_000;
 const PASS_TO_CPI_BASE_CU = 10_000;
 
-const CHUNK_LOADER_PROGRAM = new Program(chunkLoaderIdl, mockProvider);
-export const PROGRAM_ID = CHUNK_LOADER_PROGRAM.programId;
+let _program: Program<ChunkLoader> | undefined;
+
+const getStubProvider = () =>
+  createStubObject("Provider should never be used") as AnchorProvider;
+
+const getProgram =
+  () => (_program ??= new Program(chunkLoaderIdl, getStubProvider()));
+
+export const PROGRAM_ID = new PublicKey(chunkLoaderIdl.address);
 
 export type FindChunkHolderParams = {
   owner: PublicKey;
@@ -45,7 +52,7 @@ export const findChunkHolder = (
     Buffer.from("CHUNK_HOLDER"),
     owner.toBuffer(),
     new BN(chunkHolderId).toArrayLike(Buffer, "le", 4),
-  ], CHUNK_LOADER_PROGRAM.programId)[0];
+  ], PROGRAM_ID)[0];
 
 export type LoadChunkParams = {
   owner: PublicKey;
@@ -58,7 +65,7 @@ async function loadChunk({
   chunkHolderId,
   chunk,
 }: LoadChunkParams): Promise<InstructionWithCu> {
-  const instruction = await CHUNK_LOADER_PROGRAM.methods
+  const instruction = await getProgram().methods
     .loadChunk(chunkHolderId, chunk)
     .accounts({ owner })
     .instruction();
@@ -108,7 +115,7 @@ export async function passToCpi(
     cpiComputeUnits,
   }: PassToCpiParams,
 ): Promise<InstructionWithCu> {
-  const instruction = await CHUNK_LOADER_PROGRAM.methods
+  const instruction = await getProgram().methods
     .passToCpi()
     .accountsStrict({
       owner,
@@ -130,7 +137,7 @@ export async function closeChunks({
   owner,
   chunkHolderId,
 }: CloseChunksParams): Promise<InstructionWithCu> {
-  const instruction = await CHUNK_LOADER_PROGRAM.methods
+  const instruction = await getProgram().methods
     .closeChunks()
     .accountsStrict({
       owner,
@@ -148,7 +155,7 @@ export async function fetchChunkHolder(
 ): Promise<ChunkHolder | null> {
   return await fetchAccount(
     connection,
-    CHUNK_LOADER_PROGRAM.coder,
+    getProgram().coder,
     publicKey,
     "chunkHolder",
     commitmentOrConfig,

@@ -1,4 +1,4 @@
-import { AccountsCoder, AnchorProvider, Coder } from "@coral-xyz/anchor";
+import { Coder } from "@coral-xyz/anchor";
 import {
   Commitment,
   ComputeBudgetProgram,
@@ -10,20 +10,19 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
-const mockWallet = {
-  publicKey: PublicKey.default,
-  async signTransaction(): Promise<any> {
-    throw new Error("Please don't sign with mock wallet");
-  },
-  async signAllTransactions(): Promise<any[]> {
-    throw new Error("Please don't sign with mock wallet");
-  },
-};
+export const createStubObject = (errorMsg: string) => {
+  const handler: ProxyHandler<any> = {
+    get(_t, prop) {
+      if (typeof prop === "symbol") return undefined;
+      return new Proxy(() => {}, handler);
+    },
+    apply() {
+      throw new Error(errorMsg);
+    },
+  };
 
-export const mockProvider = new AnchorProvider(
-  new Connection("https://this_is_never_used.blablabla"),
-  mockWallet,
-);
+  return new Proxy({}, handler);
+};
 
 export type InstructionWithCu = {
   instruction: TransactionInstruction;
