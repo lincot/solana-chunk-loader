@@ -37,4 +37,9 @@ pub mod chunk_loader {
     pub fn close_chunks(ctx: Context<CloseChunks>) -> Result<()> {
         instructions::close_chunks(ctx)
     }
+
+    #[instruction(discriminator = [4])]
+    pub fn pass_to_cpi_checked(ctx: Context<PassToCpi>, expected_length: u16) -> Result<()> {
+        instructions::pass_to_cpi_checked(ctx, expected_length)
+    }
 }

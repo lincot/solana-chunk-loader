@@ -128,6 +128,38 @@ export async function passToCpi(
   return { instruction, cuLimit: PASS_TO_CPI_BASE_CU + cpiComputeUnits };
 }
 
+export type PassToCpiCheckedParams = {
+  owner: PublicKey;
+  chunkHolderId: number;
+  expectedLength: number;
+  program: PublicKey;
+  accounts: AccountMeta[];
+  cpiComputeUnits: number;
+};
+
+export async function passToCpiChecked(
+  {
+    owner,
+    program,
+    chunkHolderId,
+    expectedLength,
+    accounts,
+    cpiComputeUnits,
+  }: PassToCpiCheckedParams,
+): Promise<InstructionWithCu> {
+  const instruction = await getProgram().methods
+    .passToCpiChecked(expectedLength)
+    .accountsStrict({
+      owner,
+      chunkHolder: findChunkHolder({ owner, chunkHolderId }),
+      program,
+    })
+    .remainingAccounts(accounts)
+    .instruction();
+
+  return { instruction, cuLimit: PASS_TO_CPI_BASE_CU + cpiComputeUnits };
+}
+
 export type CloseChunksParams = {
   owner: PublicKey;
   chunkHolderId: number;

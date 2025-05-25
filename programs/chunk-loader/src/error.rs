@@ -7,4 +7,6 @@ use anchor_lang::prelude::*;
 pub enum ChunkLoaderError {
     #[msg("Chunk with this index has already been loaded")]
     ChunkAlreadyLoaded,
+    #[msg("Sum of lengths of chunks does not match the expected length")]
+    DataLengthMismatch,
 }

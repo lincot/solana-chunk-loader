@@ -1,4 +1,4 @@
-use crate::state::*;
+use crate::{error::*, state::*};
 use anchor_lang::{prelude::*, solana_program::instruction::Instruction};
 use solana_invoke::invoke;
 
@@ -10,6 +10,21 @@ pub struct PassToCpi<'info> {
     chunk_holder: Account<'info, ChunkHolder>,
     /// CHECK: This is the program that gets invoked.
     program: AccountInfo<'info>,
+}
+
+// `u16` is sufficient, more than 10240 bytes cannot be passed to CPI.
+pub fn pass_to_cpi_checked(ctx: Context<PassToCpi>, expected_length: u16) -> Result<()> {
+    let chunk_holder = &ctx.accounts.chunk_holder;
+    let len: usize = chunk_holder
+        .chunks
+        .iter()
+        .map(|chunk| chunk.data.len())
+        .sum();
+    if len != expected_length as usize {
+        return err!(ChunkLoaderError::DataLengthMismatch);
+    }
+
+    pass_to_cpi(ctx)
 }
 
 pub fn pass_to_cpi(ctx: Context<PassToCpi>) -> Result<()> {
