@@ -3,6 +3,7 @@
 use crate::{instructions::*, state::*};
 use anchor_lang::prelude::*;
 
+pub mod error;
 mod instructions;
 pub mod state;
 mod utils;

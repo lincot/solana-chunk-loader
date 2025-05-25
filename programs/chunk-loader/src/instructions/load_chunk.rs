@@ -1,4 +1,4 @@
-use crate::{state::*, utils::*};
+use crate::{error::*, state::*, utils::*};
 use anchor_lang::{prelude::*, Discriminator};
 
 #[derive(Accounts)]
@@ -35,6 +35,9 @@ pub fn load_chunk(ctx: Context<LoadChunk>, chunk_holder_id: u32, chunk: Chunk) -
         };
         let space = chunk_holder.data_len() + chunk.self_space();
         let mut data = ChunkHolder::deserialize(&mut &rest_data[..])?;
+        if data.chunks.iter().any(|c| c.index == chunk.index) {
+            return err!(ChunkLoaderError::ChunkAlreadyLoaded);
+        }
         data.chunks.push(chunk);
         (space, data)
     };
