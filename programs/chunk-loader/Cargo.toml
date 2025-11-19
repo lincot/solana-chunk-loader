@@ -5,7 +5,9 @@ edition = "2021"
 keywords = ["blockchain", "solana"]
 license = "MIT"
 name = "solana-chunk-loader"
-version = "0.2.1"
+readme = "../../README.md"
+repository = "https://github.com/lincot/solana-chunk-loader"
+version = "0.2.2"
 
 [lib]
 crate-type = ["cdylib", "lib"]
