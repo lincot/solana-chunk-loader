@@ -8,8 +8,7 @@ mod instructions;
 pub mod state;
 mod utils;
 
-// DO NOT EDIT the address manually. Instead, run `./switch-env.sh`
-declare_id!("ChUnQ7H46X5UeQJHVgZFBy3hGM95TwWsmvBRwQxVz3JG");
+declare_id!("CHUNk6K8LS7Ta6XgDqJQB9jR8T7Toq2dQbDnHBgmVRBu");
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_security_txt::security_txt! {

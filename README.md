@@ -12,6 +12,9 @@ The `LoadChunk` transactions can be sent in parallel, confirmed and then
 followed by the `PassToCpi` transaction. So basically, no matter the size of
 the data, it takes the same time as sending two transactions sequentially.
 
+The Chunk Loader program is currently only deployed to devnet. If you need it
+on mainnet, please [contact me](mailto:lincot@disroot.org).
+
 ## Testing
 
 ```sh
